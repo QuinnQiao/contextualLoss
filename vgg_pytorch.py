@@ -82,6 +82,8 @@ class VGG(nn.Module):
         self.model = nn.Sequential(self.model)
         self.assign_weights(pretrained_model_path)
         self.disable_grad()
+        
+        self.map = {'1': 0, '2': 1, '3': 2, '4': 3}
 
     def _loadmat(self, pretrained_model_path):
         vgg_layers = io.loadmat(pretrained_model_path)['layers'][0]
@@ -109,16 +111,20 @@ class VGG(nn.Module):
         for param in self.parameters():
             param.requires_grad = False
 
-    def forward(self, x):
+    def forward(self, x, layers=['4']):
         conv1_2 = self.model[:3]
         conv2_2 = self.model[3:8]
         conv3_2 = self.model[8:13]
-        # conv4_2 = self.model[13:22]
+        conv4_2 = self.model[13:22]
         f1 = conv1_2(x)
         f2 = conv2_2(f1)
         f3 = conv3_2(f2)
-        # f4 = conv4_2(f3)
-        return f2, f3
+        f4 = conv4_2(f3)
+        full_feats = [f1, f2, f3, f4]
+        feats = []
+        for layer in layers:
+            feats.append(full_feats[self.map[layer]])
+        return feats
 
 def vgg_preprocess(img):
     # [-1,1] --> [0,255]
