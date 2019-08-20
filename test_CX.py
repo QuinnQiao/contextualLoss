@@ -1,17 +1,18 @@
 import torch
+import torchvision.transforms as transforms
 from PIL import Image
 import os, sys, argparse
-from vgg_pytorch import *
-from CXLoss import *
+from VGG.vgg_pytorch import *
+from CX.CXLoss import *
 
 
 def get_img(img_path, transform, device):
     imgs = []
     files = os.listdir(img_path)
     for file in files:
-        img = PIL.open(os.path.join(img_path, file))
+        img = Image.open(os.path.join(img_path, file))
         img = transform(img)
-        imgs.append(img.cuda(device))
+        imgs.append(img.unsqueeze(0).cuda(device))
     return imgs
 
 def get_id(ids_str):
@@ -41,9 +42,11 @@ transform = transforms.Compose(transform_list)
 device = 'cuda:%d'%opts.gpu_id
 
 vgg = VGG(opts.pretrained_vgg_path).cuda(device)
+print('vgg loaded')
 
 input_A = get_img(opts.input_folder_A, transform, device)
 input_B = get_img(opts.input_folder_B, transform, device)
+print('img loaded')
 
 with open(os.path.join(opts.output_folder, 'results.txt'), 'w') as f:
     # within-domain
@@ -57,6 +60,7 @@ with open(os.path.join(opts.output_folder, 'results.txt'), 'w') as f:
                 loss = CX_loss(feat_1, feat_2, sigma=opts.band_width_src)
                 losses.append(loss.cpu())
             f.write(str(i) + '-' + str(j) + ': ' + str(losses) + '\n')
+    print('A done')
     f.write('\nDomain B:\n')
     for i in range(len(input_B)-1):
         for j in range(i+1, len(input_B)):
@@ -67,6 +71,7 @@ with open(os.path.join(opts.output_folder, 'results.txt'), 'w') as f:
                 loss = CX_loss(feat_1, feat_2, sigma=opts.band_width_src)
                 losses.append(loss.cpu())
             f.write(str(i) + '-' + str(j) + ': ' + str(losses) + '\n')  
+    print('B done')
     # cross-domain
     f.write('\nDomain A-B:\n')
     for i in range(len(input_A)):
@@ -78,3 +83,5 @@ with open(os.path.join(opts.output_folder, 'results.txt'), 'w') as f:
                 loss = CX_loss(feat_1, feat_2, sigma=opts.band_width_src)
                 losses.append(loss.cpu())
             f.write('A' + str(i) + '-' + 'B' + str(j) + ': ' + str(losses) + '\n')
+    print('A-B done')
+

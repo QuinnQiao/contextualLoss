@@ -92,7 +92,7 @@ class CSFlow:
 
 def CX_loss(T_features, I_features, sigma=1.0):
 
-    cs_flow = CSFlow.create_using_dotP(I_features_tf, T_features_tf, sigma=sigma)
+    cs_flow = CSFlow.create_using_dotP(I_features, T_features, sigma=sigma)
     cs = cs_flow.cs_NHWC
 
     # reduce_max X and Y dims

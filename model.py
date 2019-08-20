@@ -3,7 +3,7 @@
 # ---------------------------------------------------
 
 import tensorflow.contrib.slim as slim
-from vgg_model import *
+from VGG.vgg_model import *
 from config import *
 
 
