@@ -5,13 +5,13 @@ from vgg_pytorch import *
 from CXLoss import *
 
 
-def get_img(img_path, transform):
+def get_img(img_path, transform, device):
     imgs = []
     files = os.listdir(img_path)
     for file in files:
         img = PIL.open(os.path.join(img_path, file))
         img = transform(img)
-        imgs.append(img)
+        imgs.append(img.cuda(device))
     return imgs
 
 parser = argparse.ArgumentParser()
@@ -30,10 +30,12 @@ if opts.centercrop:
 transform_list.extend([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 transform = transforms.Compose(transform_list)
 
-vgg = VGG(opts.pretrained_vgg_path)
+device = 'cuda:%d'%opts.gpu_id
 
-input_A = get_img(opts.input_folder_A, transform)
-input_B = get_img(opts.input_folder_B, transform)
+vgg = VGG(opts.pretrained_vgg_path).cuda(device)
+
+input_A = get_img(opts.input_folder_A, transform, device)
+input_B = get_img(opts.input_folder_B, transform, device)
 
 with open(os.path.join(opts.output_folder, 'results.txt'), 'w') as f:
     # within-domain
@@ -45,7 +47,7 @@ with open(os.path.join(opts.output_folder, 'results.txt'), 'w') as f:
             losses = []
             for _, (feat_1, feat_2) in enumerate(zip(feats_1, feats_2)):
                 loss = CX_loss(feat_1, feat_2)
-                losses.append(loss)
+                losses.append(loss.cpu())
             f.write(str(i) + '-' + str(j) + ': ' + str(losses) + '\n')
     f.write('\nDomain B:\n')
     for i in range(len(input_B)):
@@ -55,7 +57,7 @@ with open(os.path.join(opts.output_folder, 'results.txt'), 'w') as f:
             losses = []
             for _, (feat_1, feat_2) in enumerate(zip(feats_1, feats_2)):
                 loss = CX_loss(feat_1, feat_2)
-                losses.append(loss)
+                losses.append(loss.cpu())
             f.write(str(i) + '-' + str(j) + ': ' + str(losses) + '\n')  
     # cross-domain
     f.write('\nDomain A-B:\n')
@@ -66,5 +68,5 @@ with open(os.path.join(opts.output_folder, 'results.txt'), 'w') as f:
             losses = []
             for _, (feat_1, feat_2) in enumerate(zip(feats_1, feats_2)):
                 loss = CX_loss(feat_1, feat_2)
-                losses.append(loss)
+                losses.append(loss.cpu())
             f.write('A' + str(i) + '-' + 'B' + str(j) + ': ' + str(losses) + '\n')
