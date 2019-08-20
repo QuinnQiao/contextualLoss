@@ -77,8 +77,8 @@ class CSFlow:
                 N, _, __, ___ = T_features.shape.as_list()
                 for i in range(N):
                     T_features_i = tf.expand_dims(T_features[i, :, :, :], 0)
-                    I_features_i = tf.expand_dims(I_features[i, :, :, :], 0)
-                    patches_HWCN_i = cs_flow.patch_decomposition(T_features_i)
+                    I_features_i = tf.expand_dims(I_features[i, :, :, :], 0) # NHWC
+                    patches_HWCN_i = cs_flow.patch_decomposition(T_features_i) # 11CP (k_h * k_w * c_in * c_out)
                     cosine_dist_i = tf.nn.conv2d(I_features_i, patches_HWCN_i, strides=[1, 1, 1, 1],
                                                         padding='VALID', use_cudnn_on_gpu=True, name='cosine_dist')
                     cosine_dist_l.append(cosine_dist_i)

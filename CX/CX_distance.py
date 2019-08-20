@@ -18,19 +18,8 @@ class CSFlow:
     def __calculate_CS(self, scaled_distances, axis_for_normalization=TensorAxis.C):
         self.scaled_distances = scaled_distances
         self.cs_weights_before_normalization = torch.exp((self.b - scaled_distances) / self.sigma)
-        # self.cs_weights_before_normalization = 1 / (1 + scaled_distances)
-        # self.cs_NHWC = CSFlow.sum_normalize(self.cs_weights_before_normalization, axis_for_normalization)
         self.cs_NHWC = self.cs_weights_before_normalization
 
-    # def reversed_direction_CS(self):
-    #     cs_flow_opposite = CSFlow(self.sigma, self.b)
-    #     cs_flow_opposite.raw_distances = self.raw_distances
-    #     work_axis = [TensorAxis.H, TensorAxis.W]
-    #     relative_dist = cs_flow_opposite.calc_relative_distances(axis=work_axis)
-    #     cs_flow_opposite.__calculate_CS(relative_dist, work_axis)
-    #     return cs_flow_opposite
-
-    # --
     @staticmethod
     def create_using_L2(I_features, T_features, sigma=float(0.5), b=float(1.0)):
         cs_flow = CSFlow(sigma, b)
@@ -193,11 +182,6 @@ class CSFlow:
 
 
 def CX_loss(T_features, I_features, deformation=False, dis=False):
-    # T_features = tf.convert_to_tensor(T_features, dtype=tf.float32)
-    # I_features = tf.convert_to_tensor(I_features, dtype=tf.float32)
-    # since this is a convertion of tensorflow to pytorch we permute the tensor from
-    # T_features = normalize_tensor(T_features)
-    # I_features = normalize_tensor(I_features)
 
     # since this originally Tensorflow implemntation
     # we modify all tensors to be as TF convention and not as the convention of pytorch.
