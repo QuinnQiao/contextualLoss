@@ -52,36 +52,56 @@ with open(os.path.join(opts.output_folder, 'results.txt'), 'w') as f:
     # within-domain
     f.write('Domain A:\n')
     for i in range(len(input_A)-1):
+        content_1 = vgg(vgg_preprocess(input_A[i]), layers=get_id(opts.vgg_layer_src))
+        style_1 = vgg(vgg_preprocess(input_A[i]), layers=get_id(opts.vgg_layer_tgt))
         for j in range(i+1, len(input_A)):
-            feats_1 = vgg(vgg_preprocess(input_A[i]), layers=get_id(opts.vgg_layer_src))
-            feats_2 = vgg(vgg_preprocess(input_A[j]), layers=get_id(opts.vgg_layer_src))
-            losses = []
-            for _, (feat_1, feat_2) in enumerate(zip(feats_1, feats_2)):
+            content_2 = vgg(vgg_preprocess(input_A[j]), layers=get_id(opts.vgg_layer_src))
+            style_2 = vgg(vgg_preprocess(input_A[j]), layers=get_id(opts.vgg_layer_tgt))
+            content_losses = []
+            for _, (feat_1, feat_2) in enumerate(zip(content_1, content_2)):
                 loss = CX_loss(feat_1, feat_2, sigma=opts.band_width_src)
-                losses.append(loss.cpu())
-            f.write(str(i) + '-' + str(j) + ': ' + str(losses) + '\n')
+                content_losses.append(loss.cpu())
+            style_losses = []
+            for _, (feat_1, feat_2) in enumerate(zip(style_1, style_2)):
+                loss = CX_loss(feat_1, feat_2, sigma=opts.band_width_tgt)
+                style_losses.append(loss.cpu())
+            f.write(str(i) + '-' + str(j) + ': ' + '\n')
+            f.write('Content:' + str(content_losses) + ', Style: ' + str(style_losses) + '\n')           
     print('A done')
     f.write('\nDomain B:\n')
     for i in range(len(input_B)-1):
+        content_1 = vgg(vgg_preprocess(input_B[i]), layers=get_id(opts.vgg_layer_src))
+        style_1 = vgg(vgg_preprocess(input_B[i]), layers=get_id(opts.vgg_layer_tgt))
         for j in range(i+1, len(input_B)):
-            feats_1 = vgg(vgg_preprocess(input_B[i]), layers=get_id(opts.vgg_layer_src))
-            feats_2 = vgg(vgg_preprocess(input_B[j]), layers=get_id(opts.vgg_layer_src))
-            losses = []
-            for _, (feat_1, feat_2) in enumerate(zip(feats_1, feats_2)):
+            content_2 = vgg(vgg_preprocess(input_B[j]), layers=get_id(opts.vgg_layer_src))
+            style_2 = vgg(vgg_preprocess(input_B[j]), layers=get_id(opts.vgg_layer_tgt))
+            content_losses = []
+            for _, (feat_1, feat_2) in enumerate(zip(content_1, content_2)):
                 loss = CX_loss(feat_1, feat_2, sigma=opts.band_width_src)
-                losses.append(loss.cpu())
-            f.write(str(i) + '-' + str(j) + ': ' + str(losses) + '\n')  
+                content_losses.append(loss.cpu())
+            style_losses = []
+            for _, (feat_1, feat_2) in enumerate(zip(style_1, style_2)):
+                loss = CX_loss(feat_1, feat_2, sigma=opts.band_width_tgt)
+                style_losses.append(loss.cpu())
+            f.write(str(i) + '-' + str(j) + ': ' + '\n')
+            f.write('Content:' + str(content_losses) + ', Style: ' + str(style_losses) + '\n')           
     print('B done')
     # cross-domain
     f.write('\nDomain A-B:\n')
-    for i in range(len(input_A)):
+    for i in range(len(input_A)-1):
+        content_1 = vgg(vgg_preprocess(input_A[i]), layers=get_id(opts.vgg_layer_src))
+        style_1 = vgg(vgg_preprocess(input_A[i]), layers=get_id(opts.vgg_layer_tgt))
         for j in range(len(input_B)):
-            feats_1 = vgg(vgg_preprocess(input_A[i]), layers=get_id(opts.vgg_layer_src))
-            feats_2 = vgg(vgg_preprocess(input_B[j]), layers=get_id(opts.vgg_layer_src))
-            losses = []
-            for _, (feat_1, feat_2) in enumerate(zip(feats_1, feats_2)):
+            content_2 = vgg(vgg_preprocess(input_B[j]), layers=get_id(opts.vgg_layer_src))
+            style_2 = vgg(vgg_preprocess(input_B[j]), layers=get_id(opts.vgg_layer_tgt))
+            content_losses = []
+            for _, (feat_1, feat_2) in enumerate(zip(content_1, content_2)):
                 loss = CX_loss(feat_1, feat_2, sigma=opts.band_width_src)
-                losses.append(loss.cpu())
-            f.write('A' + str(i) + '-' + 'B' + str(j) + ': ' + str(losses) + '\n')
+                content_losses.append(loss.cpu())
+            style_losses = []
+            for _, (feat_1, feat_2) in enumerate(zip(style_1, style_2)):
+                loss = CX_loss(feat_1, feat_2, sigma=opts.band_width_tgt)
+                style_losses.append(loss.cpu())
+            f.write('A-' + str(i) + '~B-' + str(j) + ': ' + '\n')
+            f.write('Content:' + str(content_losses) + ', Style: ' + str(style_losses) + '\n')           
     print('A-B done')
-
